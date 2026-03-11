@@ -15,6 +15,7 @@ const LoRaWANBand_t* LoRaWANBands[RADIOLIB_LORAWAN_NUM_SUPPORTED_BANDS] = {
   &AS923_4,
   &KR920,
   &IN865,
+  &ISM2_4GHz
 };
 
 const LoRaWANBand_t EU868 = {
@@ -817,6 +818,74 @@ const LoRaWANBand_t IN865 = {
     RADIOLIB_DATARATE_NONE,
     RADIOLIB_DATARATE_NONE,
     RADIOLIB_DATARATE_NONE,
+    RADIOLIB_DATARATE_NONE
+  }
+};
+
+/*!
+  Custom 2.4GHz LoRaWAN band definition for SX1280
+
+  Based on the Semtech SX1280 transceiver, a LoRa Connect™ RF chip
+  that operates in the global 2.4–2.5 GHz ISM band and supports
+  LoRa modulation. SX1280 features high sensitivity (down to ~–132 dBm)
+  and programmable bit rates for LoRa from ~0.476 kb/s up to ~202 kb/s
+  (raw PHY data rates). This profile is designed to match typical
+  SX1280 LoRa PHY capabilities such as spreading factors (SF5–SF12)
+  and bandwidths (203–1625 kHz.
+
+  NOTE: This is a custom PHY band definition for 2.4 GHz LoRa and not
+  part of the official LoRaWAN regional parameters (sub‑GHz). Users
+  should validate TX/RX performance with actual hardware.
+  Source: Semtech SX1280 2.4GHz transceiver documentation.
+*/
+const LoRaWANBand_t ISM2_4GHz = {
+  .bandNum = BandISM2_4GHz,
+  .bandType = RADIOLIB_LORAWAN_BAND_DYNAMIC,
+  .freqMin = 24000000,
+  .freqMax = 25000000,
+  .payloadLenMax = { 51, 51, 115, 115, 242, 242, 242, 242, 0, 0, 0, 0, 0, 0, 0 },
+  .powerMax = 12,
+  .powerNumSteps = 7,
+  .dutyCycle = 0,
+  .dwellTimeUp = 0,
+  .dwellTimeDn = 0,
+  .txParamSupported = true,
+  .txFreqs = {
+    { .idx = 0, .freq = 24400000, .drMin = 0, .drMax = 5, .dr = 3 },
+    { .idx = 1, .freq = 24500000, .drMin = 0, .drMax = 5, .dr = 3 },
+    { .idx = 2, .freq = 24600000, .drMin = 0, .drMax = 5, .dr = 3 }
+  },
+  .numTxSpans = 0,
+  .txSpans = {
+    RADIOLIB_LORAWAN_CHANNEL_SPAN_NONE,
+    RADIOLIB_LORAWAN_CHANNEL_SPAN_NONE
+  },
+  .rx1Span = RADIOLIB_LORAWAN_CHANNEL_SPAN_NONE,
+  .rx1DrTable = {
+    { 0,  0,  0,  0,  0,  0, 1, 2 },
+    { 1,  0,  0,  0,  0,  0, 2, 3 },
+    { 2,  1,  0,  0,  0,  0, 3, 4 },
+    { 3,  2,  1,  0,  0,  0, 4, 5 },
+    { 4,  3,  2,  1,  0,  0, 5, 5 },
+    { 5,  4,  3,  2,  1,  0, 5, 5 },
+    { 0x0F,0x0F,0x0F,0x0F,0x0F,0x0F,0x0F,0x0F },
+  },
+  .rx2 = { .idx = 0, .freq = 24700000, .drMin = 0, .drMax = 5, .dr = 2 },
+  .txWoR = {
+    { .idx = 0, .freq = 24450000, .drMin = 3, .drMax = 3, .dr = 3 },
+    { .idx = 1, .freq = 24550000, .drMin = 3, .drMax = 3, .dr = 3 }
+  },
+  .txAck = {
+    { .idx = 0, .freq = 24450000, .drMin = 3, .drMax = 3, .dr = 3 },
+    { .idx = 1, .freq = 24550000, .drMin = 3, .drMax = 3, .dr = 3 }
+  },
+  .dataRates = {
+    { .modem = RADIOLIB_MODEM_LORA, .dr = {.lora = {12, 406, 5}}, .pc = {.lora = {8, false, true, true}}},
+    { .modem = RADIOLIB_MODEM_LORA, .dr = {.lora = {10, 406, 5}}, .pc = {.lora = {8, false, true, true}}},
+    { .modem = RADIOLIB_MODEM_LORA, .dr = {.lora = { 8, 406, 5}}, .pc = {.lora = {8, false, true, false}}},
+    { .modem = RADIOLIB_MODEM_LORA, .dr = {.lora = { 7, 812, 5}}, .pc = {.lora = {8, false, true, false}}},
+    { .modem = RADIOLIB_MODEM_LORA, .dr = {.lora = { 6, 812, 5}}, .pc = {.lora = {8, false, true, false}}},
+    { .modem = RADIOLIB_MODEM_LORA, .dr = {.lora = { 5,1625, 5}}, .pc = {.lora = {8, false, true, false}}},
     RADIOLIB_DATARATE_NONE
   }
 };
