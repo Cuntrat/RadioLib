@@ -965,45 +965,62 @@ int16_t SX128x::setDataShaping(uint8_t sh) {
 }
 
 int16_t SX128x::setSyncWord(uint8_t* sync, size_t len) {
-  // check active modem
   uint8_t modem = getPacketType();
-  if(!((modem == RADIOLIB_SX128X_PACKET_TYPE_GFSK) || (modem == RADIOLIB_SX128X_PACKET_TYPE_FLRC))) {
+
+  /* ── LoRa / Ranging: single-byte sync word via the dedicated overload ── */
+  if(modem == RADIOLIB_SX128X_PACKET_TYPE_LORA ||
+     modem == RADIOLIB_SX128X_PACKET_TYPE_RANGING) {
+    if(len < 1) {
+      return(RADIOLIB_ERR_INVALID_SYNC_WORD);
+    }
+    /*
+     * controlBits = 0x44 selects the public-network (LoRaWAN) sync word.
+     * For private networks use 0x12 (RADIOLIB_SX128X_SYNC_WORD_PRIVATE).
+     */
+    return(setSyncWord(sync[0], 0x44));
+  }
+
+  /* ── GFSK / FLRC: byte-array sync word (original implementation) ─────── */
+  if(!((modem == RADIOLIB_SX128X_PACKET_TYPE_GFSK) ||
+       (modem == RADIOLIB_SX128X_PACKET_TYPE_FLRC))) {
     return(RADIOLIB_ERR_WRONG_MODEM);
   }
 
   if(modem == RADIOLIB_SX128X_PACKET_TYPE_GFSK) {
-    // GFSK can use up to 5 bytes as sync word
+    /* GFSK supports up to 5 sync-word bytes */
     if(len > 5) {
       return(RADIOLIB_ERR_INVALID_SYNC_WORD);
     }
-
-    // calculate sync word length parameter value
     if(len > 0) {
-      this->syncWordLen = (len - 1)*2;
+      this->syncWordLen = (len - 1) * 2;
     }
 
   } else {
-    // FLRC requires 32-bit sync word
+    /* FLRC requires exactly 4 bytes (or 0 to disable) */
     if(!((len == 0) || (len == 4))) {
       return(RADIOLIB_ERR_INVALID_SYNC_WORD);
     }
-
-    // save sync word length parameter value
     this->syncWordLen = len;
   }
 
-  // update sync word
-  int16_t state = SX128x::writeRegister(RADIOLIB_SX128X_REG_SYNC_WORD_1_BYTE_4 + (5 - len), sync, len);
+  /* Write sync-word bytes to the register bank */
+  int16_t state = SX128x::writeRegister(
+      RADIOLIB_SX128X_REG_SYNC_WORD_1_BYTE_4 + (5 - len), sync, len);
   RADIOLIB_ASSERT(state);
 
-  // update packet parameters
+  /* Update packet parameters */
   if(this->syncWordLen == 0) {
     this->syncWordMatch = RADIOLIB_SX128X_GFSK_FLRC_SYNC_WORD_OFF;
   } else {
-    /// \todo add support for multiple sync words
     this->syncWordMatch = RADIOLIB_SX128X_GFSK_FLRC_SYNC_WORD_1;
   }
-  return(setPacketParamsGFSK(this->preambleLengthGFSK, this->syncWordLen, this->syncWordMatch, this->crcGFSK, this->whitening, this->packetType));
+
+  return(setPacketParamsGFSK(this->preambleLengthGFSK,
+                             this->syncWordLen,
+                             this->syncWordMatch,
+                             this->crcGFSK,
+                             this->whitening,
+                             this->packetType));
 }
 
 int16_t SX128x::setSyncWord(uint8_t syncWord, uint8_t controlBits) {

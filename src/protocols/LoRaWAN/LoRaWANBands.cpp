@@ -831,34 +831,44 @@ const LoRaWANBand_t IN865 = {
  */
 
 const LoRaWANBand_t ISM2_4GHz = {
-  .bandNum = BandISM2_4GHz,
+  .bandNum  = BandISM2_4GHz,
   .bandType = RADIOLIB_LORAWAN_BAND_DYNAMIC,
 
-  // SX1280 operates 2400–2500 MHz; values in 100 Hz steps
-  .freqMin = 24000000,   // 2400.0 MHz
-  .freqMax = 25000000,   // 2500.0 MHz
+  /* SX1280 operating range 2400–2500 MHz; values in 100 Hz steps */
+  .freqMin  = 24000000,   /* 2400.0 MHz */
+  .freqMax  = 25000000,   /* 2500.0 MHz */
 
-  // Maximum application payload per DR (N-value, before LoRaWAN overhead)
-  // DR6 (SF5/BW1625) theoretical max ~222 bytes, conservatively 200 here
+  /*
+   * Maximum application payload per DR (N-value, excl. LoRaWAN overhead).
+   * DR | SF | BW (kHz) | Max payload
+   * ───┼────┼──────────┼────────────
+   *  0 | 12 |  203.125 |  51 B
+   *  1 | 11 |  203.125 |  51 B
+   *  2 | 10 |  203.125 | 115 B
+   *  3 |  9 |  203.125 | 115 B
+   *  4 |  8 |  406.25  | 222 B
+   *  5 |  7 |  812.5   | 222 B
+   *  6 |  5 | 1625.0   | 200 B  (conservative)
+   */
   .payloadLenMax = { 51, 51, 115, 115, 222, 222, 200, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-  // SX1280 Tx power range: -18 to +13 dBm
-  .powerMax       = 13,
-  .powerNumSteps  = 7,
+  /* SX1280 Tx power range: −18 … +12.5 dBm (integer ceiling → 13) */
+  .powerMax      = 13,
+  .powerNumSteps = 7,   /* 0, −2, −4, −6, −8, −10, −12, −14 dBm steps */
 
-  // No regulatory duty cycle in the global 2.4 GHz ISM band
+  /* No regulatory duty cycle in the global 2.4 GHz ISM band */
   .dutyCycle   = 0,
   .dwellTimeUp = 0,
   .dwellTimeDn = 0,
 
-  // TxParamSetup MAC command is supported (allows network to cap EIRP)
+  /* TxParamSetup MAC command supported (network may cap EIRP) */
   .txParamSupported = true,
 
-  // Three default uplink channels (dynamic band)
+  /* Three default uplink channels (dynamic band) */
   .txFreqs = {
-    { .idx = 0, .freq = 24400000, .drMin = 0, .drMax = 6, .dr = 3 }, // 2440.0 MHz
-    { .idx = 1, .freq = 24500000, .drMin = 0, .drMax = 6, .dr = 3 }, // 2450.0 MHz
-    { .idx = 2, .freq = 24600000, .drMin = 0, .drMax = 6, .dr = 3 }, // 2460.0 MHz
+    { .idx = 0, .freq = 24400000, .drMin = 0, .drMax = 6, .dr = 3 }, /* 2440.0 MHz */
+    { .idx = 1, .freq = 24500000, .drMin = 0, .drMax = 6, .dr = 3 }, /* 2450.0 MHz */
+    { .idx = 2, .freq = 24600000, .drMin = 0, .drMax = 6, .dr = 3 }, /* 2460.0 MHz */
   },
 
   .numTxSpans = 0,
@@ -868,32 +878,29 @@ const LoRaWANBand_t ISM2_4GHz = {
   },
   .rx1Span = RADIOLIB_LORAWAN_CHANNEL_SPAN_NONE,
 
-  /*
-   * rx1DrTable[uplinkDR][rx1DrOffset] → Rx1 DR
-   * Pattern: Rx1DR = max(0, uplinkDR - offset), capped at DR6.
-   */
   .rx1DrTable = {
-    { 0,    0,    1,    2,    3,    4,    5,    6    }, // DR0 uplink
-    { 0,    1,    2,    3,    4,    5,    6,    6    }, // DR1 uplink
-    { 1,    2,    3,    4,    5,    6,    6,    6    }, // DR2 uplink
-    { 2,    3,    4,    5,    6,    6,    6,    6    }, // DR3 uplink
-    { 3,    4,    5,    6,    6,    6,    6,    6    }, // DR4 uplink
-    { 4,    5,    6,    6,    6,    6,    6,    6    }, // DR5 uplink
-    { 5,    6,    6,    6,    6,    6,    6,    6    }, // DR6 uplink
-    { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }, // DR7  – unused
-    { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }, // DR8  – unused
-    { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }, // DR9  – unused
-    { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }, // DR10 – unused
-    { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }, // DR11 – unused
-    { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }, // DR12 – unused
-    { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }, // DR13 – unused
-    { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F }, // DR14 – unused
+    /* DR0  */ {    0,    0,    0,    0,    0,    0,    0,    0 },
+    /* DR1  */ {    1,    0,    0,    0,    0,    0,    0,    0 },
+    /* DR2  */ {    2,    1,    0,    0,    0,    0,    0,    0 },
+    /* DR3  */ {    3,    2,    1,    0,    0,    0,    0,    0 },
+    /* DR4  */ {    4,    3,    2,    1,    0,    0,    0,    0 },
+    /* DR5  */ {    5,    4,    3,    2,    1,    0,    0,    0 },
+    /* DR6  */ {    6,    5,    4,    3,    2,    1,    0,    0 },
+    /* DR7  */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
+    /* DR8  */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
+    /* DR9  */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
+    /* DR10 */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
+    /* DR11 */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
+    /* DR12 */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
+    /* DR13 */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
+    /* DR14 */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
   },
 
-  // Rx2 window: 2470.0 MHz, DR2 (SF10/BW203)
+  /* Rx2 window: 2470.0 MHz at DR2 (SF10 / BW 203.125 kHz) */
   .rx2 = { .idx = 0, .freq = 24700000, .drMin = 0, .drMax = 6, .dr = 2 },
 
-  // WoR / ACK channels (optional, same as default channels for simplicity)
+  /* WoR / ACK relay channels (not part of standard LoRaWAN; kept for
+   * structural completeness — set equal to mid-band channels) */
   .txWoR = {
     { .idx = 0, .freq = 24450000, .drMin = 3, .drMax = 3, .dr = 3 },
     { .idx = 1, .freq = 24550000, .drMin = 3, .drMax = 3, .dr = 3 }
@@ -904,47 +911,49 @@ const LoRaWANBand_t ISM2_4GHz = {
   },
 
   /*
-   * DataRates for SX1280 LoRa @ 2.4 GHz
-   * DR | SF | BW (kHz)  | Approx. bitrate
-   * ---|----|-----------|----------------
-   *  0 | 12 | 203.125   |  ~293 bps
-   *  1 | 11 | 203.125   |  ~537 bps
-   *  2 | 10 | 203.125   |  ~977 bps
-   *  3 |  9 | 203.125   |  ~1758 bps
-   *  4 |  8 | 406.25    |  ~6250 bps
-   *  5 |  7 | 812.5     |  ~21875 bps
-   *  6 |  5 | 1625.0    |  ~202 kbps
+   * Data rates for SX1280 LoRa @ 2.4 GHz
+   * ─────────────────────────────────────────────────────────────
+   * DR | SF |    BW (kHz) | Approx. raw bitrate | Rx sensitivity
+   * ───┼────┼─────────────┼─────────────────────┼────────────────
+   *  0 | 12 |   203.125   |    ~293 bps         |  −130 dBm
+   *  1 | 11 |   203.125   |    ~537 bps         |  −127 dBm
+   *  2 | 10 |   203.125   |    ~977 bps         |  −124 dBm
+   *  3 |  9 |   203.125   |   ~1758 bps         |  −121 dBm
+   *  4 |  8 |   406.25    |   ~6250 bps         |  −116 dBm
+   *  5 |  7 |   812.5     |  ~21875 bps         |  −112 dBm
+   *  6 |  5 |  1625.0     |  ~202 kbps          |  − 99 dBm
+   * ──────────────────────────────────────────────────────────────
    */
   .dataRates = {
     /* DR0 */ { .modem = RADIOLIB_MODEM_LORA,
                 .dr = {.lora = {12, 203.125f, 5}},
-                .pc = {.lora = {8, false, true, true}} },
+                .pc = {.lora = { 8, false, true, true  }} },
     /* DR1 */ { .modem = RADIOLIB_MODEM_LORA,
                 .dr = {.lora = {11, 203.125f, 5}},
-                .pc = {.lora = {8, false, true, true}} },
+                .pc = {.lora = { 8, false, true, true  }} },
     /* DR2 */ { .modem = RADIOLIB_MODEM_LORA,
                 .dr = {.lora = {10, 203.125f, 5}},
-                .pc = {.lora = {8, false, true, false}} },
+                .pc = {.lora = { 8, false, true, false }} },
     /* DR3 */ { .modem = RADIOLIB_MODEM_LORA,
                 .dr = {.lora = { 9, 203.125f, 5}},
-                .pc = {.lora = {8, false, true, false}} },
+                .pc = {.lora = { 8, false, true, false }} },
     /* DR4 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = { 8, 406.25f, 5}},
-                .pc = {.lora = {8, false, true, false}} },
+                .dr = {.lora = { 8, 406.25f,  5}},
+                .pc = {.lora = { 8, false, true, false }} },
     /* DR5 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = { 7, 812.5f, 5}},
-                .pc = {.lora = {8, false, true, false}} },
+                .dr = {.lora = { 7, 812.5f,   5}},
+                .pc = {.lora = { 8, false, true, false }} },
     /* DR6 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = { 5, 1625.0f, 5}},
-                .pc = {.lora = {8, false, true, false}} },
-    RADIOLIB_DATARATE_NONE, // DR7
-    RADIOLIB_DATARATE_NONE, // DR8
-    RADIOLIB_DATARATE_NONE, // DR9
-    RADIOLIB_DATARATE_NONE, // DR10
-    RADIOLIB_DATARATE_NONE, // DR11
-    RADIOLIB_DATARATE_NONE, // DR12
-    RADIOLIB_DATARATE_NONE, // DR13
-    RADIOLIB_DATARATE_NONE, // DR14
+                .dr = {.lora = { 5, 1625.0f,  5}},
+                .pc = {.lora = { 8, false, true, false }} },
+    RADIOLIB_DATARATE_NONE,  /* DR7  – unused */
+    RADIOLIB_DATARATE_NONE,  /* DR8  – unused */
+    RADIOLIB_DATARATE_NONE,  /* DR9  – unused */
+    RADIOLIB_DATARATE_NONE,  /* DR10 – unused */
+    RADIOLIB_DATARATE_NONE,  /* DR11 – unused */
+    RADIOLIB_DATARATE_NONE,  /* DR12 – unused */
+    RADIOLIB_DATARATE_NONE,  /* DR13 – unused */
+    RADIOLIB_DATARATE_NONE,  /* DR14 – unused */
   }
 };
 
