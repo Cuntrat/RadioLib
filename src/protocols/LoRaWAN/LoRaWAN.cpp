@@ -3181,7 +3181,7 @@ int16_t LoRaWANNode::setRx2Dr(uint8_t dr) {
   }
 
   // check if datarate is available in the selected band
-  if(this->band->dataRates[dr].modem != RADIOLIB_MODEM_NONE) {
+  if(this->band->dataRates[dr].modem == RADIOLIB_MODEM_NONE) {
     return(RADIOLIB_ERR_INVALID_DATA_RATE);
   }
 

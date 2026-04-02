@@ -834,7 +834,7 @@ int16_t SX128x::checkDataRate(DataRate_t dr, ModemType_t modem) {
 
   } else if(modem == RADIOLIB_MODEM_LORA) {
     RADIOLIB_CHECK_RANGE(dr.lora.spreadingFactor, 5, 12, RADIOLIB_ERR_INVALID_SPREADING_FACTOR);
-    RADIOLIB_CHECK_RANGE(dr.lora.bandwidth, 203.0f, 1625.0f, RADIOLIB_ERR_INVALID_BANDWIDTH);
+    RADIOLIB_CHECK_RANGE(dr.lora.bandwidth, 203.125f, 1625.0f, RADIOLIB_ERR_INVALID_BANDWIDTH);
     RADIOLIB_CHECK_RANGE(dr.lora.codingRate, 4, 8, RADIOLIB_ERR_INVALID_CODING_RATE);
     return(RADIOLIB_ERR_NONE);
   

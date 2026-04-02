@@ -156,7 +156,7 @@
 #define RADIOLIB_LORAWAN_MAX_CHANGES_DEFAULT                    (4)
 
 // MAC commands
-#define RADIOLIB_LORAWAN_NUM_MAC_COMMANDS                       (24)
+#define RADIOLIB_LORAWAN_NUM_MAC_COMMANDS                       (17)
 
 #define RADIOLIB_LORAWAN_MAC_RESET                              (0x01)
 #define RADIOLIB_LORAWAN_MAC_LINK_CHECK                         (0x02)
