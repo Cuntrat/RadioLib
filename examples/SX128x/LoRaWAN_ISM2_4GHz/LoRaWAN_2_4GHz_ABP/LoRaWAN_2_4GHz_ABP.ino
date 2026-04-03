@@ -32,7 +32,7 @@
 
 // Create instances
 SX1280 radio = new Module(SX1280_NSS, SX1280_DIO1, SX1280_NRST, SX1280_BUSY);
-LoRaWANNode node(&radio, &ISM2_4GHz);
+LoRaWANNode node(&radio, &ISM2400);
 
 // LoRaWAN ABP credentials
 // IMPORTANT: Get these from your network server when registering device!

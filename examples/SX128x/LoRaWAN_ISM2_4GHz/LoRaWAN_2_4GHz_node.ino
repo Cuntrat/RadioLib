@@ -57,7 +57,7 @@ SX1280 radio = new Module(PIN_CS, PIN_IRQ, PIN_RST, PIN_BUSY);
 
 // ── LoRaWAN node with ISM2_4GHz band ────────────────────────
 // subBand = 0 (only one set of channels in this custom band)
-LoRaWANNode node(&radio, &ISM2_4GHz, 0);
+LoRaWANNode node(&radio, &ISM2400, 0);
 
 // ── ABP credentials ─────────────────────────────────────────
 // Device address  (4 bytes)

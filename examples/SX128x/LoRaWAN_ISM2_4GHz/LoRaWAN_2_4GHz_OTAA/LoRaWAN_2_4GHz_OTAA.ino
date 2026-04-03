@@ -45,7 +45,7 @@
 SX1280 radio = new Module(SX1280_NSS, SX1280_DIO1, SX1280_NRST, SX1280_BUSY);
 
 // Create LoRaWAN node instance using ISM2_4GHz band
-LoRaWANNode node(&radio, &ISM2_4GHz);
+LoRaWANNode node(&radio, &ISM2400);
 
 // LoRaWAN OTAA credentials
 // IMPORTANT: Replace these with your device credentials from network server!

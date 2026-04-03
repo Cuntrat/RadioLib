@@ -15,7 +15,7 @@ const LoRaWANBand_t* LoRaWANBands[RADIOLIB_LORAWAN_NUM_SUPPORTED_BANDS] = {
   &AS923_4,
   &KR920,
   &IN865,
-  &ISM2_4GHz
+  &ISM2400
 };
 
 const LoRaWANBand_t EU868 = {
@@ -830,8 +830,8 @@ const LoRaWANBand_t IN865 = {
  *   - SX1280ED1ZHP User Guide (UG.DEV.SX1280-1.W.APP)
  */
 
-const LoRaWANBand_t ISM2_4GHz = {
-  .bandNum  = BandISM2_4GHz,
+const LoRaWANBand_t ISM2400 = {
+  .bandNum  = BandISM2400,
   .bandType = RADIOLIB_LORAWAN_BAND_DYNAMIC,
 
   /* SX1280 operating range 2400–2500 MHz; values in 100 Hz steps */

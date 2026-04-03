@@ -489,7 +489,7 @@ extern const LoRaWANBand_t AS923_3;
 extern const LoRaWANBand_t AS923_4;
 extern const LoRaWANBand_t KR920;
 extern const LoRaWANBand_t IN865;
-extern const LoRaWANBand_t ISM2_4GHz;
+extern const LoRaWANBand_t ISM2400;
 
 /*!
   \struct LoRaWANBandNum_t
@@ -507,7 +507,7 @@ enum LoRaWANBandNum_t {
   BandAS923_4,
   BandKR920,
   BandIN865,
-  BandISM2_4GHz,
+  BandISM2400,
   BandLast
 };
 

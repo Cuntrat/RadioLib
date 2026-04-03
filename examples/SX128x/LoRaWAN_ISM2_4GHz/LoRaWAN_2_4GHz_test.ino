@@ -87,7 +87,7 @@ static const uint8_t  INITIAL_DATARATE   = 3;       /* DR3 = SF9 / BW 203.125   
 
 /* Radio and LoRaWAN node objects */
 SX1280 radio = new Module(SX1280_NSS, SX1280_DIO1, SX1280_NRST, SX1280_BUSY);
-LoRaWANNode node(&radio, &ISM2_4GHz);
+LoRaWANNode node(&radio, &ISM2400);
 
 /* ── Utility: print RadioLib status code ── */
 static void printState(const char* label, int16_t state) {
