@@ -48,10 +48,6 @@ uint8_t appSKey[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 uint8_t nwkSKey[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-// Frame counters (start at 0, increment after each uplink)
-uint32_t fCntUp = 0;
-uint32_t fCntDown = 0;
-
 void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 5000);
@@ -86,8 +82,9 @@ void setup() {
   Serial.println();
   
   // Initialize LoRaWAN with ABP
+  // For LoRaWAN 1.0.x: use nwkSKey for FNwkSIntKey, SNwkSIntKey, and NwkSEncKey
   Serial.println(F("Activating ABP session..."));
-  state = node.beginABP(devAddr, nwkSKey, appSKey);
+  state = node.beginABP(devAddr, nwkSKey, nwkSKey, nwkSKey, appSKey);
   
   if (state != RADIOLIB_ERR_NONE) {
     Serial.print(F("✗ ABP activation failed: "));
@@ -112,65 +109,69 @@ void setup() {
 
 void loop() {
   // Build payload
-  uint8_t payload[16];
-  uint8_t len = 0;
+  uint8_t payloadUp[16];
+  size_t len = 0;
   
   // Counter (4 bytes)
-  payload[len++] = (fCntUp >> 24) & 0xFF;
-  payload[len++] = (fCntUp >> 16) & 0xFF;
-  payload[len++] = (fCntUp >> 8) & 0xFF;
-  payload[len++] = fCntUp & 0xFF;
+  static uint32_t counter = 0;
+  payloadUp[len++] = (counter >> 24) & 0xFF;
+  payloadUp[len++] = (counter >> 16) & 0xFF;
+  payloadUp[len++] = (counter >> 8) & 0xFF;
+  payloadUp[len++] = counter & 0xFF;
   
   // Dummy sensor value (2 bytes)
   int16_t value = 2350;  // 23.50°C
-  payload[len++] = (value >> 8) & 0xFF;
-  payload[len++] = value & 0xFF;
+  payloadUp[len++] = (value >> 8) & 0xFF;
+  payloadUp[len++] = value & 0xFF;
   
   Serial.print(F("[TX #"));
-  Serial.print(fCntUp);
+  Serial.print(counter);
   Serial.print(F("] "));
   Serial.print(len);
   Serial.print(F(" bytes: "));
-  for (uint8_t i = 0; i < len; i++) {
-    if (payload[i] < 16) Serial.print('0');
-    Serial.print(payload[i], HEX);
+  for (size_t i = 0; i < len; i++) {
+    if (payloadUp[i] < 16) Serial.print('0');
+    Serial.print(payloadUp[i], HEX);
     Serial.print(' ');
   }
   Serial.print(F("... "));
   
-  // Send
-  int16_t state = node.sendReceive(payload, len, 1);
+  // Prepare downlink buffer
+  uint8_t payloadDown[256];
+  size_t downlinkLen = 0;
   
-  if (state == RADIOLIB_ERR_NONE) {
-    Serial.println(F("✓ SENT"));
-    fCntUp++;
+  // Send and receive
+  // state > 0 = downlink in window 'state'
+  // state = 0 = sent, no downlink
+  // state < 0 = error
+  int16_t state = node.sendReceive(payloadUp, len, 1, payloadDown, &downlinkLen);
+  
+  if (state < 0) {
+    Serial.print(F("✗ FAIL ("));
+    Serial.print(state);
+    Serial.println(F(")"));
     
-    // Check downlink
-    if (node.downlinkReceived()) {
-      Serial.println(F("  ↓ Downlink!"));
-      
-      uint8_t dl[256];
-      size_t dlLen = node.downlinkLength();
-      uint8_t port = node.downlinkPort();
-      
-      node.getDownlink(dl, &dlLen);
-      
-      Serial.print(F("  Port "));
-      Serial.print(port);
-      Serial.print(F(", "));
-      Serial.print(dlLen);
-      Serial.print(F(" bytes: "));
-      for (size_t i = 0; i < dlLen; i++) {
-        if (dl[i] < 16) Serial.print('0');
-        Serial.print(dl[i], HEX);
+  } else if (state == 0) {
+    Serial.println(F("✓ SENT (no downlink)"));
+    counter++;
+    
+  } else {
+    Serial.print(F("✓ SENT + DOWNLINK in RX"));
+    Serial.print(state);
+    Serial.print(F(" ("));
+    Serial.print(downlinkLen);
+    Serial.println(F(" bytes)"));
+    
+    if (downlinkLen > 0) {
+      Serial.print(F("    "));
+      for (size_t i = 0; i < downlinkLen; i++) {
+        if (payloadDown[i] < 16) Serial.print('0');
+        Serial.print(payloadDown[i], HEX);
         Serial.print(' ');
       }
       Serial.println();
     }
-  } else {
-    Serial.print(F("✗ FAIL ("));
-    Serial.print(state);
-    Serial.println(F(")"));
+    counter++;
   }
   
   Serial.println();

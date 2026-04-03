@@ -66,9 +66,6 @@ uint8_t appKey[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 uint8_t nwkKey[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-// Uplink counter (for ABP mode or session restore)
-uint32_t fCntUp = 0;
-
 void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 5000);  // Wait max 5s for serial
@@ -177,80 +174,84 @@ void setup() {
 
 void loop() {
   // Build uplink payload
-  uint8_t payload[32];
-  uint8_t payloadLen = 0;
+  uint8_t payloadUp[32];
+  size_t payloadLen = 0;
   
   // Example: Send counter + temperature reading
-  uint32_t counter = fCntUp;
-  payload[payloadLen++] = (counter >> 24) & 0xFF;
-  payload[payloadLen++] = (counter >> 16) & 0xFF;
-  payload[payloadLen++] = (counter >> 8) & 0xFF;
-  payload[payloadLen++] = counter & 0xFF;
+  static uint32_t counter = 0;
+  payloadUp[payloadLen++] = (counter >> 24) & 0xFF;
+  payloadUp[payloadLen++] = (counter >> 16) & 0xFF;
+  payloadUp[payloadLen++] = (counter >> 8) & 0xFF;
+  payloadUp[payloadLen++] = counter & 0xFF;
   
   // Example: Add dummy sensor data (replace with real sensors!)
   int16_t temperature = 2350;  // 23.50°C in centidegrees
-  payload[payloadLen++] = (temperature >> 8) & 0xFF;
-  payload[payloadLen++] = temperature & 0xFF;
+  payloadUp[payloadLen++] = (temperature >> 8) & 0xFF;
+  payloadUp[payloadLen++] = temperature & 0xFF;
   
   Serial.print(F("[UPLINK #"));
   Serial.print(counter);
   Serial.print(F("] Port 1, "));
   Serial.print(payloadLen);
   Serial.print(F(" bytes: "));
-  for (uint8_t i = 0; i < payloadLen; i++) {
-    if (payload[i] < 16) Serial.print('0');
-    Serial.print(payload[i], HEX);
+  for (size_t i = 0; i < payloadLen; i++) {
+    if (payloadUp[i] < 16) Serial.print('0');
+    Serial.print(payloadUp[i], HEX);
     Serial.print(' ');
   }
   Serial.print(F("... "));
   
+  // Prepare downlink buffer
+  uint8_t payloadDown[256];
+  size_t downlinkLen = 0;
+  
   // Send uplink and optionally receive downlink (Class A behavior)
   // Port 1 is used for application data
-  int16_t state = node.sendReceive(payload, payloadLen, 1);
+  // state > 0 = downlink received in window 'state'
+  // state = 0 = uplink sent, no downlink
+  // state < 0 = error
+  int16_t state = node.sendReceive(payloadUp, payloadLen, 1, payloadDown, &downlinkLen);
   
-  if (state == RADIOLIB_ERR_NONE) {
-    Serial.println(F("✓ SENT"));
-    fCntUp++;
+  if (state < 0) {
+    if (state == RADIOLIB_ERR_NETWORK_NOT_JOINED) {
+      Serial.println(F("✗ NOT JOINED"));
+      Serial.println(F("  Attempting rejoin..."));
+      
+      state = node.activateOTAA();
+      if (state == RADIOLIB_LORAWAN_NEW_SESSION) {
+        Serial.println(F("  ✓ Rejoin successful!"));
+      } else {
+        Serial.print(F("  ✗ Rejoin failed: "));
+        Serial.println(state);
+      }
+    } else {
+      Serial.print(F("✗ FAILED (code: "));
+      Serial.print(state);
+      Serial.println(F(")"));
+    }
     
-    // Check for downlink
-    if (node.downlinkReceived()) {
-      Serial.println(F("  ↓ Downlink received!"));
-      
-      uint8_t downlink[256];
-      size_t downlinkLen = node.downlinkLength();
-      uint8_t port = node.downlinkPort();
-      
-      node.getDownlink(downlink, &downlinkLen);
-      
-      Serial.print(F("  Port "));
-      Serial.print(port);
-      Serial.print(F(", "));
-      Serial.print(downlinkLen);
-      Serial.print(F(" bytes: "));
+  } else if (state == 0) {
+    Serial.println(F("✓ SENT (no downlink)"));
+    counter++;
+    
+  } else {
+    // state > 0 means downlink received
+    Serial.print(F("✓ SENT + DOWNLINK in RX"));
+    Serial.print(state);
+    Serial.print(F(" ("));
+    Serial.print(downlinkLen);
+    Serial.println(F(" bytes)"));
+    
+    if (downlinkLen > 0) {
+      Serial.print(F("    Payload: "));
       for (size_t i = 0; i < downlinkLen; i++) {
-        if (downlink[i] < 16) Serial.print('0');
-        Serial.print(downlink[i], HEX);
+        if (payloadDown[i] < 16) Serial.print('0');
+        Serial.print(payloadDown[i], HEX);
         Serial.print(' ');
       }
       Serial.println();
     }
-    
-  } else if (state == RADIOLIB_ERR_NETWORK_NOT_JOINED) {
-    Serial.println(F("✗ NOT JOINED"));
-    Serial.println(F("  Attempting rejoin..."));
-    
-    state = node.activateOTAA();
-    if (state == RADIOLIB_LORAWAN_NEW_SESSION) {
-      Serial.println(F("  ✓ Rejoin successful!"));
-    } else {
-      Serial.print(F("  ✗ Rejoin failed: "));
-      Serial.println(state);
-    }
-    
-  } else {
-    Serial.print(F("✗ FAILED (code: "));
-    Serial.print(state);
-    Serial.println(F(")"));
+    counter++;
   }
   
   Serial.println();
