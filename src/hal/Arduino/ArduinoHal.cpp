@@ -2,6 +2,12 @@
 
 #if defined(RADIOLIB_BUILD_ARDUINO)
 
+#if defined(ARDUINO_ARCH_STM32)
+  // Include STM32 DWT (Data Watchpoint and Trace) for microsecond timing
+  extern "C" void dwt_init(void) __attribute__((weak));
+  extern "C" void dwt_init(void) {}
+#endif
+
 ArduinoHal::ArduinoHal(): RadioLibHal(INPUT, OUTPUT, LOW, HIGH, RISING, FALLING), spi(&RADIOLIB_DEFAULT_SPI), initInterface(true) {}
 
 ArduinoHal::ArduinoHal(SPIClass& spi, SPISettings spiSettings): RadioLibHal(INPUT, OUTPUT, LOW, HIGH, RISING, FALLING), spi(&spi), spiSettings(spiSettings) {}

@@ -852,9 +852,13 @@ const LoRaWANBand_t ISM2_4GHz = {
    */
   .payloadLenMax = { 51, 51, 115, 115, 222, 222, 200, 0, 0, 0, 0, 0, 0, 0, 0 },
 
-  /* SX1280 Tx power range: −18 … +12.5 dBm (integer ceiling → 13) */
-  .powerMax      = 13,
-  .powerNumSteps = 7,   /* 0, −2, −4, −6, −8, −10, −12, −14 dBm steps */
+  /* 
+   * SX1280 Tx power range: −18 … +12.5 dBm
+   * NOTE: powerMax represents device capability, not regulatory limit.
+   * For ISM 2.4 GHz there is no LoRa Alliance standard; using SX1280 hardware max.
+   */
+  .powerMax      = 12,   /* +12.5 dBm rounded down (SX1280 maximum) */
+  .powerNumSteps = 15,   /* 15 steps of 2 dBm: 12, 10, 8, ... -16, -18 dBm */
 
   /* No regulatory duty cycle in the global 2.4 GHz ISM band */
   .dutyCycle   = 0,
@@ -864,7 +868,12 @@ const LoRaWANBand_t ISM2_4GHz = {
   /* TxParamSetup MAC command supported (network may cap EIRP) */
   .txParamSupported = true,
 
-  /* Three default uplink channels (dynamic band) */
+  /* 
+   * Three default uplink channels (dynamic band)
+   * NOTE: These frequencies are NOT defined by LoRa Alliance standard.
+   * Chosen to avoid WiFi congestion: 2440, 2450, 2460 MHz (between WiFi channels).
+   * Adjust based on local regulations and gateway configuration.
+   */
   .txFreqs = {
     { .idx = 0, .freq = 24400000, .drMin = 0, .drMax = 6, .dr = 3 }, /* 2440.0 MHz */
     { .idx = 1, .freq = 24500000, .drMin = 0, .drMax = 6, .dr = 3 }, /* 2450.0 MHz */
