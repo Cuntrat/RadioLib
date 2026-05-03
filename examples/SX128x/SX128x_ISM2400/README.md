@@ -60,38 +60,38 @@ Basic radio transmission test:
 
 ---
 
-## 📡 ISM2_4GHz Band Configuration
+## 📡 ISM2400 Band Configuration
 
-The `ISM2_4GHz` band is defined in `src/protocols/LoRaWAN/LoRaWANBands.cpp`:
+The `ISM2400` band is defined in `src/protocols/LoRaWAN/LoRaWANBands.cpp`:
 
 ### Frequencies
-**Default uplink channels:**
-- Channel 0: 2440.0 MHz
-- Channel 1: 2450.0 MHz
-- Channel 2: 2460.0 MHz
+**Default uplink channels (JoinReq):**
+- Channel 0: 2403.0 MHz
+- Channel 1: 2425.0 MHz
+- Channel 2: 2479.0 MHz
 
 **RX2 (downlink):**
-- Frequency: 2470.0 MHz
-- Data Rate: DR2 (SF10, BW 203.125 kHz)
+- Frequency: 2423.0 MHz
+- Data Rate: DR0 (SF12, BW 812.5 kHz)
 
-⚠️ **Note:** These frequencies are **NOT** defined by LoRa Alliance standard (no official 2.4 GHz LoRaWAN spec exists yet). They were chosen to minimize WiFi interference.
+Reference: Semtech TN1300.03 (`region_ww_2g4_defs.h` in `Datasheets/LoRaWAN 2.4GHz`).
 
 ### Data Rates
 
 | DR | SF | BW (kHz) | Bitrate | Max Payload |
 |----|----|---------:|--------:|------------:|
-| DR0 | SF12 | 203.125 | ~488 bps | 51 bytes |
-| DR1 | SF11 | 203.125 | ~894 bps | 51 bytes |
-| DR2 | SF10 | 203.125 | ~1.6 kbps | 115 bytes |
-| DR3 | SF9 | 203.125 | ~2.9 kbps | 115 bytes |
-| DR4 | SF8 | 406.25 | ~10.9 kbps | 222 bytes |
-| DR5 | SF7 | 812.5 | ~38.4 kbps | 222 bytes |
-| DR6 | SF5 | 1625.0 | ~137 kbps | 200 bytes |
+| DR0 | SF12 | 812.5 | ~1.2 kbps | 51 bytes |
+| DR1 | SF11 | 812.5 | ~2.1 kbps | 115 bytes |
+| DR2 | SF10 | 812.5 | ~3.9 kbps | 220 bytes |
+| DR3 | SF9  | 812.5 | ~7.1 kbps | 220 bytes |
+| DR4 | SF8  | 812.5 | ~12.7 kbps | 220 bytes |
+| DR5 | SF7  | 812.5 | ~22.2 kbps | 220 bytes |
+| DR6 | SF6  | 812.5 | ~38 kbps | 220 bytes |
+| DR7 | SF5  | 812.5 | ~63 kbps | 220 bytes |
 
 ### Power Settings
-- **TX Power Range:** -18 to +12.5 dBm (SX1280 hardware limit)
-- **Default:** 10 dBm
-- **Steps:** 2 dBm (15 power levels total)
+- **Default Max EIRP:** +10 dBm (per TN1300.03)
+- **Power index:** 0..7 (2 dB step)
 
 ⚠️ **Note:** No regulatory duty cycle in ISM 2.4 GHz band.
 
@@ -128,7 +128,7 @@ The `ISM2_4GHz` band is defined in `src/protocols/LoRaWAN/LoRaWANBands.cpp`:
 
 1. **Register device** on network server:
    - Generate JoinEUI, DevEUI, AppKey, NwkKey
-   - Configure gateway for frequencies: 2440, 2450, 2460 MHz
+   - Configure gateway for frequencies: 2403, 2425, 2479 MHz (RX2: 2423 MHz)
 
 2. **Update sketch** with your credentials:
    ```cpp

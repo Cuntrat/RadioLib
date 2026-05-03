@@ -2,7 +2,7 @@
  * LoRaWAN ABP Example - 2.4 GHz ISM Band (SX1280)
  * 
  * This example demonstrates LoRaWAN Activation By Personalization (ABP)
- * using the ISM2_4GHz band with the SX1280 radio.
+ * using the ISM2400 band with the SX1280 radio.
  * 
  * ABP vs OTAA:
  *   - ABP: Session keys pre-configured, no join needed (simpler, less secure)
@@ -26,7 +26,7 @@
 
 // Pin definitions
 #define SX1280_NSS    D7
-#define SX1280_DIO1   D11
+#define SX1280_DIO1   D5
 #define SX1280_NRST   A0
 #define SX1280_BUSY   D3
 
@@ -41,12 +41,16 @@ LoRaWANNode node(&radio, &ISM2400);
 uint32_t devAddr = 0x00000000;
 
 // AppSKey - 128-bit Application Session Key
-uint8_t appSKey[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+uint8_t appSKey[] = { 
+  0xD5, 0xA8, 0xD2, 0x3B, 0xDE, 0x2D, 0x8D, 0xA4, 
+  0x72, 0xDF, 0x25, 0x95, 0x25, 0xB6, 0x65, 0xE6 
+};
 
 // NwkSKey - 128-bit Network Session Key  
-uint8_t nwkSKey[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+uint8_t nwkSKey[] = { 
+  0xD5, 0xA8, 0xD2, 0x3B, 0xDE, 0x2D, 0x8D, 0xA4, 
+  0x72, 0xDF, 0x25, 0x95, 0x25, 0xB6, 0x65, 0xE6 
+};
 
 void setup() {
   Serial.begin(115200);
@@ -63,11 +67,11 @@ void setup() {
   Serial.println(F("Initializing SX1280..."));
   
   int16_t state = radio.begin(
-    2440.0,                              // Frequency
-    203.125,                             // Bandwidth
-    10,                                  // SF10 (DR2)
+    2425.0,                              // Initial frequency
+    812.5,                               // Bandwidth
+    12,                                  // SF12 (DR0)
     5,                                   // CR 4/5
-    RADIOLIB_SX128X_SYNC_WORD_LORAWAN,  // 0x34
+    RADIOLIB_SX128X_SYNC_WORD_LORAWAN,  // 0x21
     10,                                  // TX power
     8                                    // Preamble
   );
@@ -82,12 +86,18 @@ void setup() {
   Serial.println();
   
   // Initialize LoRaWAN with ABP
-  // For LoRaWAN 1.0.x: use nwkSKey for FNwkSIntKey, SNwkSIntKey, and NwkSEncKey
-  Serial.println(F("Activating ABP session..."));
+  Serial.println(F("Setting ABP session..."));
   state = node.beginABP(devAddr, nwkSKey, nwkSKey, nwkSKey, appSKey);
-  
   if (state != RADIOLIB_ERR_NONE) {
-    Serial.print(F("✗ ABP activation failed: "));
+    Serial.print(F("✗ beginABP failed: "));
+    Serial.println(state);
+    while (true) delay(1000);
+  }
+  
+  // IMPORTANT: actually activate ABP session
+  state = node.activateABP();
+  if (state < RADIOLIB_ERR_NONE) {
+    Serial.print(F("✗ activateABP failed: "));
     Serial.println(state);
     while (true) delay(1000);
   }
@@ -96,8 +106,8 @@ void setup() {
   Serial.println();
   
   Serial.println(F("Configuration:"));
-  Serial.println(F("  Band:       ISM2_4GHz"));
-  Serial.println(F("  Frequencies: 2440, 2450, 2460 MHz"));
+  Serial.println(F("  Band:       ISM2400"));
+  Serial.println(F("  Frequencies: 2403, 2425, 2479 MHz (RX2: 2423 MHz)"));
   Serial.print(F("  DevAddr:    0x"));
   Serial.println(devAddr, HEX);
   Serial.println();

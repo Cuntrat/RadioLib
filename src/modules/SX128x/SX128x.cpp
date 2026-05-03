@@ -810,7 +810,10 @@ int16_t SX128x::setDataRate(DataRate_t dr, ModemType_t modem) {
       RADIOLIB_ASSERT(state);
       state = this->setSpreadingFactor(dr.lora.spreadingFactor);
       RADIOLIB_ASSERT(state);
-      state = this->setCodingRate(dr.lora.codingRate);
+      // LoRaWAN ISM2400 commonly uses CR 4/8 with long interleaving.
+      // Keep default behavior for other rates/modulations.
+      bool longInterleaving = (dr.lora.codingRate == 8) && (dr.lora.bandwidth >= 800.0f);
+      state = this->setCodingRate(dr.lora.codingRate, longInterleaving);
   } else {
       return(RADIOLIB_ERR_WRONG_MODEM);
   }

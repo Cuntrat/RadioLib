@@ -3358,7 +3358,9 @@ int16_t LoRaWANNode::setPhyProperties(const LoRaWANChannel_t* chnl, uint8_t dir,
       state = this->phyLayer->setPreambleLength(pre ? pre : RADIOLIB_LORAWAN_LORA_PREAMBLE_LEN);
       RADIOLIB_ASSERT(state);
 
-      syncWord[0] = RADIOLIB_LORAWAN_LORA_SYNC_WORD;
+      syncWord[0] = (this->band->bandNum == BandISM2400)
+                    ? RADIOLIB_LORAWAN_LORA_SYNC_WORD_ISM2400
+                    : RADIOLIB_LORAWAN_LORA_SYNC_WORD;
       syncWordLen = 1;
       RADIOLIB_DEBUG_PROTOCOL_PRINT("[LoRa] SF = %d, BW = ", dr->lora.spreadingFactor);
       RADIOLIB_DEBUG_PROTOCOL_PRINT_FLOAT_NOTAG((double)dr->lora.bandwidth, 1);

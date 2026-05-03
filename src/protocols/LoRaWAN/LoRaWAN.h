@@ -16,7 +16,10 @@
 #define RADIOLIB_LORAWAN_CLASS_C                                (0x02)
 
 // preamble format
+// LoRaWAN public sync word is 0x34 on sub-GHz regions.
+// ISM2400 (2.4 GHz) uses 0x21 as per RP/TN1300.
 #define RADIOLIB_LORAWAN_LORA_SYNC_WORD                         (0x34)
+#define RADIOLIB_LORAWAN_LORA_SYNC_WORD_ISM2400                 (0x21)
 #define RADIOLIB_LORAWAN_LORA_PREAMBLE_LEN                      (8)
 #define RADIOLIB_LORAWAN_GFSK_SYNC_WORD                         (0xC194C1)
 #define RADIOLIB_LORAWAN_GFSK_PREAMBLE_LEN                      (5)

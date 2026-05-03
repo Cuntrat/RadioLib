@@ -1,262 +1,171 @@
-/*
- * LoRaWAN OTAA Example - 2.4 GHz ISM Band (SX1280)
- * 
- * This example demonstrates proper LoRaWAN Over-The-Air Activation (OTAA)
- * using the ISM2_4GHz band with the SX1280 radio.
- * 
- * IMPORTANT: This requires a LoRaWAN gateway supporting 2.4 GHz!
- * Unlike raw LoRa, LoRaWAN implements:
- *   - Network join procedure (OTAA)
- *   - AES-128 encryption
- *   - Frame counters for replay protection
- *   - MAC commands (ADR, duty cycle, etc.)
- *   - Network server integration
- * 
- * Hardware:
- *   - STM NUCLEO-L073RZ (or other Arduino-compatible board)
- *   - SX1280RF1ZHP shield or SX1280 module
- *   - 2.4 GHz antenna
- * 
- * Pinout (MBED Arduino Shield - adjust for your board):
- *   NSS   = D7
- *   DIO1  = D11
- *   NRST  = A0
- *   BUSY  = D3
- *   MOSI  = D11 (hardware SPI)
- *   MISO  = D12 (hardware SPI)
- *   SCK   = D13 (hardware SPI)
- * 
- * Network Server Configuration:
- *   - Add device with OTAA credentials below
- *   - Configure gateway for 2.4 GHz reception
- *   - Set frequencies: 2440, 2450, 2460 MHz (or adjust txFreqs in band definition)
- */
-
 #include <RadioLib.h>
-
-// Pin definitions for SX1280RF1ZHP shield on Nucleo
-// Adjust these for your hardware!
-#define SX1280_NSS    D7      // CS pin
-#define SX1280_DIO1   D11     // DIO1 / IRQ pin  
-#define SX1280_NRST   A0      // RESET pin
-#define SX1280_BUSY   D3      // BUSY pin
-
-// Create radio module instance
-SX1280 radio = new Module(SX1280_NSS, SX1280_DIO1, SX1280_NRST, SX1280_BUSY);
-
-// Create LoRaWAN node instance using ISM2_4GHz band
-LoRaWANNode node(&radio, &ISM2400);
-
-// LoRaWAN OTAA credentials
-// IMPORTANT: Replace these with your device credentials from network server!
-// These are example values - they will NOT work without proper registration.
-
-// JoinEUI (formerly AppEUI) - 64-bit, LSB first
-uint64_t joinEUI = 0x0000000000000000;
-
-// DevEUI - 64-bit, unique device identifier, LSB first
-uint64_t devEUI = 0x0000000000000000;
-
-// AppKey - 128-bit AES key for application layer encryption
-uint8_t appKey[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-// NwkKey - 128-bit AES key for network layer encryption (LoRaWAN 1.1+)
-// For LoRaWAN 1.0.x, this is the same as AppKey
-uint8_t nwkKey[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-void setup() {
-  Serial.begin(115200);
-  while (!Serial && millis() < 5000);  // Wait max 5s for serial
-  
-  Serial.println(F("\n╔════════════════════════════════════════════════╗"));
-  Serial.println(F("║  LoRaWAN OTAA - 2.4 GHz ISM Band (SX1280)      ║"));
-  Serial.println(F("╚════════════════════════════════════════════════╝"));
-  Serial.println();
-  
-  Serial.println(F("Hardware: SX1280 @ 2.4 GHz"));
-  Serial.print(F("Pins: NSS=D")); Serial.print(SX1280_NSS);
-  Serial.print(F(" DIO1=D")); Serial.print(SX1280_DIO1);
-  Serial.print(F(" NRST=A")); Serial.print(SX1280_NRST - A0);
-  Serial.print(F(" BUSY=D")); Serial.println(SX1280_BUSY);
-  Serial.println();
-
-  // Initialize SPI
-  SPI.begin();
-  
-  Serial.println(F("Initializing SX1280..."));
-  
-  // Initialize radio with default settings for ISM2_4GHz band
-  // Frequency will be managed by LoRaWAN stack
-  int16_t state = radio.begin(
-    2440.0,                              // Initial frequency (MHz)
-    203.125,                             // Bandwidth (kHz) - DR2 default
-    10,                                  // Spreading Factor - DR2 default
-    5,                                   // Coding Rate 4/5
-    RADIOLIB_SX128X_SYNC_WORD_LORAWAN,  // LoRaWAN sync word (0x34)
-    10,                                  // TX power (dBm)
-    8                                    // Preamble length
-  );
-  
-  if (state != RADIOLIB_ERR_NONE) {
-    Serial.print(F("✗ Radio initialization FAILED with code: "));
-    Serial.println(state);
-    while (true) { delay(1000); }
-  }
-  
-  Serial.println(F("✓ SX1280 initialized"));
-  Serial.println();
-  
-  // Initialize LoRaWAN node with OTAA credentials
-  Serial.println(F("Initializing LoRaWAN node..."));
-  state = node.beginOTAA(joinEUI, devEUI, nwkKey, appKey);
-  
-  if (state != RADIOLIB_ERR_NONE) {
-    Serial.print(F("✗ LoRaWAN initialization FAILED with code: "));
-    Serial.println(state);
-    while (true) { delay(1000); }
-  }
-  
-  Serial.println(F("✓ LoRaWAN node initialized"));
-  Serial.println();
-  
-  // Print configuration
-  Serial.println(F("Configuration:"));
-  Serial.println(F("  Band:       ISM2_4GHz"));
-  Serial.println(F("  Frequencies: 2440, 2450, 2460 MHz"));
-  Serial.println(F("  Data Rates: DR0-DR6 (SF12-SF5)"));
-  Serial.println(F("  Sync Word:  0x34 (LoRaWAN public)"));
-  Serial.println(F("  Join Type:  OTAA"));
-  Serial.println();
-  
-  // Attempt OTAA join
-  Serial.println(F("Attempting OTAA join..."));
-  Serial.println(F("(This requires a LoRaWAN gateway at 2.4 GHz!)"));
-  Serial.println();
-  
-  // Try to join the network
-  // This will send Join Request packets and wait for Join Accept
-  state = node.activateOTAA();
-  
-  if (state == RADIOLIB_LORAWAN_NEW_SESSION) {
-    Serial.println(F("✓✓✓ JOIN SUCCESSFUL! ✓✓✓"));
-    Serial.println(F("Network session established"));
-    Serial.println();
-    
-    // Print session info
-    Serial.println(F("Session Information:"));
-    Serial.print(F("  DevAddr:  0x"));
-    Serial.println(node.getDevAddr(), HEX);
-    Serial.println();
-    
-  } else if (state == RADIOLIB_ERR_NETWORK_NOT_JOINED) {
-    Serial.println(F("✗ Join failed - no response from network"));
-    Serial.println(F(""));
-    Serial.println(F("Possible causes:"));
-    Serial.println(F("  1. No gateway in range"));
-    Serial.println(F("  2. Gateway not configured for 2.4 GHz"));
-    Serial.println(F("  3. Wrong credentials (JoinEUI/DevEUI/Keys)"));
-    Serial.println(F("  4. Gateway frequencies don't match (2440/2450/2460 MHz)"));
-    Serial.println();
-    Serial.println(F("Will retry in loop..."));
-    
-  } else {
-    Serial.print(F("✗ Join failed with code: "));
-    Serial.println(state);
-    Serial.println(F("Check wiring and credentials"));
-  }
-  
-  Serial.println(F("Ready! Entering main loop..."));
-  Serial.println(F("════════════════════════════════════════════════"));
-  Serial.println();
-}
-
-void loop() {
-  // Build uplink payload
-  uint8_t payloadUp[32];
-  size_t payloadLen = 0;
-  
-  // Example: Send counter + temperature reading
-  static uint32_t counter = 0;
-  payloadUp[payloadLen++] = (counter >> 24) & 0xFF;
-  payloadUp[payloadLen++] = (counter >> 16) & 0xFF;
-  payloadUp[payloadLen++] = (counter >> 8) & 0xFF;
-  payloadUp[payloadLen++] = counter & 0xFF;
-  
-  // Example: Add dummy sensor data (replace with real sensors!)
-  int16_t temperature = 2350;  // 23.50°C in centidegrees
-  payloadUp[payloadLen++] = (temperature >> 8) & 0xFF;
-  payloadUp[payloadLen++] = temperature & 0xFF;
-  
-  Serial.print(F("[UPLINK #"));
-  Serial.print(counter);
-  Serial.print(F("] Port 1, "));
-  Serial.print(payloadLen);
-  Serial.print(F(" bytes: "));
-  for (size_t i = 0; i < payloadLen; i++) {
-    if (payloadUp[i] < 16) Serial.print('0');
-    Serial.print(payloadUp[i], HEX);
-    Serial.print(' ');
-  }
-  Serial.print(F("... "));
-  
-  // Prepare downlink buffer
-  uint8_t payloadDown[256];
-  size_t downlinkLen = 0;
-  
-  // Send uplink and optionally receive downlink (Class A behavior)
-  // Port 1 is used for application data
-  // state > 0 = downlink received in window 'state'
-  // state = 0 = uplink sent, no downlink
-  // state < 0 = error
-  int16_t state = node.sendReceive(payloadUp, payloadLen, 1, payloadDown, &downlinkLen);
-  
-  if (state < 0) {
-    if (state == RADIOLIB_ERR_NETWORK_NOT_JOINED) {
-      Serial.println(F("✗ NOT JOINED"));
-      Serial.println(F("  Attempting rejoin..."));
-      
-      state = node.activateOTAA();
-      if (state == RADIOLIB_LORAWAN_NEW_SESSION) {
-        Serial.println(F("  ✓ Rejoin successful!"));
-      } else {
-        Serial.print(F("  ✗ Rejoin failed: "));
-        Serial.println(state);
-      }
-    } else {
-      Serial.print(F("✗ FAILED (code: "));
-      Serial.print(state);
-      Serial.println(F(")"));
-    }
-    
-  } else if (state == 0) {
-    Serial.println(F("✓ SENT (no downlink)"));
-    counter++;
-    
-  } else {
-    // state > 0 means downlink received
-    Serial.print(F("✓ SENT + DOWNLINK in RX"));
-    Serial.print(state);
-    Serial.print(F(" ("));
-    Serial.print(downlinkLen);
-    Serial.println(F(" bytes)"));
-    
-    if (downlinkLen > 0) {
-      Serial.print(F("    Payload: "));
-      for (size_t i = 0; i < downlinkLen; i++) {
-        if (payloadDown[i] < 16) Serial.print('0');
-        Serial.print(payloadDown[i], HEX);
-        Serial.print(' ');
-      }
-      Serial.println();
-    }
-    counter++;
-  }
-  
-  Serial.println();
-  
-  // Wait before next uplink (Class A device)
-  // Adjust based on your duty cycle requirements
-  delay(30000);  // 30 seconds between transmissions
-}
+ #include <EEPROM.h>
+ 
+ // ---------------- PINS ----------------
+ #define SX1280_NSS   D7
+ #define SX1280_DIO1  D5
+ #define SX1280_NRST  A0
+ #define SX1280_BUSY  D3
+ 
+ // ---------------- CREDENTIALS (MSB) ----------------
+ uint64_t joinEUI = 0xA001C5DC0FA37C02ULL;
+ uint64_t devEUI  = 0x6B7107D07ED5B370ULL;
+ 
+ // LoRaWAN 1.0.4: AppKey
+ uint8_t appKey[16] = {
+   0xD5, 0xA8, 0xD2, 0x3B, 0xDE, 0x2D, 0x8D, 0xA4,
+   0x72, 0xDF, 0x25, 0x95, 0x25, 0xB6, 0x65, 0xE6
+ };
+ 
+ // ---------------- RADIO / NODE ----------------
+ LoRaWANBand_t myBand = ISM2400;
+ SX1280 radio = new Module(SX1280_NSS, SX1280_DIO1, SX1280_NRST, SX1280_BUSY);
+ LoRaWANNode node(&radio, &myBand);
+ 
+ bool joined = false;
+ 
+ // ---------------- NONCES PERSISTENCE ----------------
+ static const uint32_t NONCES_MAGIC = 0x4C574E31UL; // "LWN1"
+ static const int EE_ADDR_MAGIC  = 0;
+ static const int EE_ADDR_NONCES = EE_ADDR_MAGIC + sizeof(uint32_t);
+ static const int EE_SIZE_BYTES  = EE_ADDR_NONCES + RADIOLIB_LORAWAN_NONCES_BUF_SIZE;
+ 
+ static void eepromBeginIfNeeded() {
+ #if defined(ESP8266) || defined(ESP32)
+   EEPROM.begin(EE_SIZE_BYTES);
+ #endif
+ }
+ 
+ static void eepromCommitIfNeeded() {
+ #if defined(ESP8266) || defined(ESP32)
+   EEPROM.commit();
+ #endif
+ }
+ 
+ bool restoreNonces() {
+   uint32_t magic = 0;
+   EEPROM.get(EE_ADDR_MAGIC, magic);
+   if(magic != NONCES_MAGIC) {
+     Serial.println(F("No saved nonces"));
+     return false;
+   }
+ 
+   uint8_t nonces[RADIOLIB_LORAWAN_NONCES_BUF_SIZE];
+   for(size_t i = 0; i < RADIOLIB_LORAWAN_NONCES_BUF_SIZE; i++) {
+     nonces[i] = EEPROM.read(EE_ADDR_NONCES + i);
+   }
+ 
+   int16_t st = node.setBufferNonces(nonces);
+   if(st == RADIOLIB_ERR_NONE) {
+     Serial.println(F("Nonces restored"));
+     return true;
+   }
+ 
+   Serial.print(F("Nonces restore failed: "));
+   Serial.println(st);
+   return false;
+ }
+ 
+ void saveNonces() {
+   uint8_t* p = node.getBufferNonces();
+   EEPROM.put(EE_ADDR_MAGIC, NONCES_MAGIC);
+   for(size_t i = 0; i < RADIOLIB_LORAWAN_NONCES_BUF_SIZE; i++) {
+     EEPROM.write(EE_ADDR_NONCES + i, p[i]);
+   }
+   eepromCommitIfNeeded();
+ }
+ 
+ void tryJoin() {
+   Serial.println(F("OTAA join (DR0, CH2403, sync 0x21)..."));
+   int16_t st = node.activateOTAA();
+ 
+   // IMPORTANT: always save nonces, also on failure
+   saveNonces();
+ 
+   if(st == RADIOLIB_LORAWAN_NEW_SESSION || st == RADIOLIB_LORAWAN_SESSION_RESTORED) {
+     joined = true;
+     Serial.println(F("JOIN OK"));
+     Serial.print(F("DevAddr: 0x"));
+     Serial.println(node.getDevAddr(), HEX);
+   } else {
+     joined = false;
+     Serial.print(F("Join failed: "));
+     Serial.println(st);
+   }
+ }
+ 
+ void setup() {
+   Serial.begin(115200);
+   while(!Serial && millis() < 5000) {}
+ 
+   Serial.println(F("\nLoRaWAN OTAA 2.4GHz test + nonces persistence"));
+ 
+   SPI.begin();
+ 
+   int16_t st = radio.begin(
+     2403.0,                              // MHz
+     812.5,                               // kHz
+     12,                                  // SF
+     8,                                   // CR base (LoRaWAN path sets DR params)
+     RADIOLIB_SX128X_SYNC_WORD_LORAWAN,   // 0x21
+     10,                                  // dBm
+     8                                    // preamble
+   );
+   if(st != RADIOLIB_ERR_NONE) {
+     Serial.print(F("Radio init failed: "));
+     Serial.println(st);
+     while(true) delay(1000);
+   }
+ 
+   // LoRaWAN 1.0.4 -> nwkKey = NULL
+   st = node.beginOTAA(joinEUI, devEUI, NULL, appKey);
+   if(st != RADIOLIB_ERR_NONE) {
+     Serial.print(F("LoRaWAN init failed: "));
+     Serial.println(st);
+     while(true) delay(1000);
+   }
+   node.scanGuard = 250;
+ 
+   st = node.setDatarate(0); // DR0 = SF12
+   if(st != RADIOLIB_ERR_NONE) {
+     Serial.print(F("setDatarate failed: "));
+     Serial.println(st);
+     while(true) delay(1000);
+   }
+ 
+   eepromBeginIfNeeded();
+   restoreNonces();
+ 
+   tryJoin();
+ }
+ 
+ void loop() {
+   if(!joined) {
+     delay(10000);
+     tryJoin();
+     return;
+   }
+ 
+   static uint32_t counter = 0;
+   uint8_t up[4] = {
+     (uint8_t)(counter >> 24),
+     (uint8_t)(counter >> 16),
+     (uint8_t)(counter >> 8),
+     (uint8_t)(counter)
+   };
+ 
+   uint8_t down[256];
+   size_t downLen = 0;
+ 
+   int16_t st = node.sendReceive(up, sizeof(up), 1, down, &downLen);
+   Serial.print(F("Uplink result: "));
+   Serial.println(st);
+ 
+   if(st == RADIOLIB_ERR_NETWORK_NOT_JOINED) {
+     joined = false;
+   } else if(st >= 0) {
+     counter++;
+   }
+ 
+   delay(5000);
+ }

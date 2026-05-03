@@ -834,31 +834,29 @@ const LoRaWANBand_t ISM2400 = {
   .bandNum  = BandISM2400,
   .bandType = RADIOLIB_LORAWAN_BAND_DYNAMIC,
 
-  /* SX1280 operating range 2400–2500 MHz; values in 100 Hz steps */
+  /* ISM2400 regional range in Semtech reference definitions; values in 100 Hz steps */
   .freqMin  = 24000000,   /* 2400.0 MHz */
-  .freqMax  = 25000000,   /* 2500.0 MHz */
+  .freqMax  = 24800000,   /* 2480.0 MHz */
 
   /*
-   * Maximum application payload per DR (N-value, excl. LoRaWAN overhead).
-   * DR | SF | BW (kHz) | Max payload
-   * ───┼────┼──────────┼────────────
-   *  0 | 12 |  203.125 |  51 B
-   *  1 | 11 |  203.125 |  51 B
-   *  2 | 10 |  203.125 | 115 B
-   *  3 |  9 |  203.125 | 115 B
-   *  4 |  8 |  406.25  | 222 B
-   *  5 |  7 |  812.5   | 222 B
-   *  6 |  5 | 1625.0   | 200 B  (conservative)
+   * Maximum application payload per DR (N-value, excl. LoRaWAN overhead)
+   * according to TN1300.03 Table 8.
+   * DR | SF | BW (kHz) | Max payload (N)
+   * ───┼────┼──────────┼────────────────
+   *  0 | 12 |   812.5  |   51 B
+   *  1 | 11 |   812.5  |  115 B
+   *  2 | 10 |   812.5  |  220 B
+   *  3 |  9 |   812.5  |  220 B
+   *  4 |  8 |   812.5  |  220 B
+   *  5 |  7 |   812.5  |  220 B
+   *  6 |  6 |   812.5  |  220 B
+   *  7 |  5 |   812.5  |  220 B
    */
-  .payloadLenMax = { 51, 51, 115, 115, 222, 222, 200, 0, 0, 0, 0, 0, 0, 0, 0 },
+  .payloadLenMax = { 51, 115, 220, 220, 220, 220, 220, 220, 0, 0, 0, 0, 0, 0, 0 },
 
-  /* 
-   * SX1280 Tx power range: −18 … +12.5 dBm
-   * NOTE: powerMax represents device capability, not regulatory limit.
-   * For ISM 2.4 GHz there is no LoRa Alliance standard; using SX1280 hardware max.
-   */
-  .powerMax      = 12,   /* +12.5 dBm rounded down (SX1280 maximum) */
-  .powerNumSteps = 15,   /* 15 steps of 2 dBm: 12, 10, 8, ... -16, -18 dBm */
+  /* TN1300.03: Max EIRP defaults to +10 dBm, 2 dB steps, indices 0..7 */
+  .powerMax      = 10,
+  .powerNumSteps = 7,
 
   /* No regulatory duty cycle in the global 2.4 GHz ISM band */
   .dutyCycle   = 0,
@@ -870,14 +868,13 @@ const LoRaWANBand_t ISM2400 = {
 
   /* 
    * Three default uplink channels (dynamic band)
-   * NOTE: These frequencies are NOT defined by LoRa Alliance standard.
-   * Chosen to avoid WiFi congestion: 2440, 2450, 2460 MHz (between WiFi channels).
-   * Adjust based on local regulations and gateway configuration.
+   * Semtech ISM2400 default JoinReq channels (TN1300.03 Table 3):
+   * 2403, 2425, 2479 MHz with DR0..DR7.
    */
   .txFreqs = {
-    { .idx = 0, .freq = 24400000, .drMin = 0, .drMax = 6, .dr = 3 }, /* 2440.0 MHz */
-    { .idx = 1, .freq = 24500000, .drMin = 0, .drMax = 6, .dr = 3 }, /* 2450.0 MHz */
-    { .idx = 2, .freq = 24600000, .drMin = 0, .drMax = 6, .dr = 3 }, /* 2460.0 MHz */
+    { .idx = 0, .freq = 24030000, .drMin = 0, .drMax = 7, .dr = 3 }, /* 2403.0 MHz */
+    { .idx = 1, .freq = 24250000, .drMin = 0, .drMax = 7, .dr = 3 }, /* 2425.0 MHz */
+    { .idx = 2, .freq = 24790000, .drMin = 0, .drMax = 7, .dr = 3 }, /* 2479.0 MHz */
   },
 
   .numTxSpans = 0,
@@ -888,14 +885,14 @@ const LoRaWANBand_t ISM2400 = {
   .rx1Span = RADIOLIB_LORAWAN_CHANNEL_SPAN_NONE,
 
   .rx1DrTable = {
-    /* DR0  */ {    0,    0,    0,    0,    0,    0,    0,    0 },
-    /* DR1  */ {    1,    0,    0,    0,    0,    0,    0,    0 },
-    /* DR2  */ {    2,    1,    0,    0,    0,    0,    0,    0 },
-    /* DR3  */ {    3,    2,    1,    0,    0,    0,    0,    0 },
-    /* DR4  */ {    4,    3,    2,    1,    0,    0,    0,    0 },
-    /* DR5  */ {    5,    4,    3,    2,    1,    0,    0,    0 },
-    /* DR6  */ {    6,    5,    4,    3,    2,    1,    0,    0 },
-    /* DR7  */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
+    /* DR0  */ {    0,    0,    0,    0,    0,    0, 0x0F, 0x0F },
+    /* DR1  */ {    1,    0,    0,    0,    0,    0, 0x0F, 0x0F },
+    /* DR2  */ {    2,    1,    0,    0,    0,    0, 0x0F, 0x0F },
+    /* DR3  */ {    3,    2,    1,    0,    0,    0, 0x0F, 0x0F },
+    /* DR4  */ {    4,    3,    2,    1,    0,    0, 0x0F, 0x0F },
+    /* DR5  */ {    5,    4,    3,    2,    1,    0, 0x0F, 0x0F },
+    /* DR6  */ {    6,    5,    4,    3,    2,    1, 0x0F, 0x0F },
+    /* DR7  */ {    7,    6,    5,    4,    3,    2, 0x0F, 0x0F },
     /* DR8  */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
     /* DR9  */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
     /* DR10 */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
@@ -905,8 +902,8 @@ const LoRaWANBand_t ISM2400 = {
     /* DR14 */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
   },
 
-  /* Rx2 window: 2470.0 MHz at DR2 (SF10 / BW 203.125 kHz) */
-  .rx2 = { .idx = 0, .freq = 24700000, .drMin = 0, .drMax = 6, .dr = 2 },
+  /* Rx2 window: 2423.0 MHz at DR0 (SF12 / BW 812.5 kHz) */
+  .rx2 = { .idx = 0, .freq = 24230000, .drMin = 0, .drMax = 7, .dr = 0 },
 
   /* WoR / ACK relay channels (not part of standard LoRaWAN; kept for
    * structural completeness — set equal to mid-band channels) */
@@ -920,42 +917,45 @@ const LoRaWANBand_t ISM2400 = {
   },
 
   /*
-   * Data rates for SX1280 LoRa @ 2.4 GHz
+   * Data rates for SX1280 LoRa @ ISM2400 (TN1300.03 Table 4)
    * ─────────────────────────────────────────────────────────────
-   * DR | SF |    BW (kHz) | Approx. raw bitrate | Rx sensitivity
-   * ───┼────┼─────────────┼─────────────────────┼────────────────
-   *  0 | 12 |   203.125   |    ~293 bps         |  −130 dBm
-   *  1 | 11 |   203.125   |    ~537 bps         |  −127 dBm
-   *  2 | 10 |   203.125   |    ~977 bps         |  −124 dBm
-   *  3 |  9 |   203.125   |   ~1758 bps         |  −121 dBm
-   *  4 |  8 |   406.25    |   ~6250 bps         |  −116 dBm
-   *  5 |  7 |   812.5     |  ~21875 bps         |  −112 dBm
-   *  6 |  5 |  1625.0     |  ~202 kbps          |  − 99 dBm
+   * DR | SF |    BW (kHz) | Approx. raw bitrate
+   * ───┼────┼─────────────┼─────────────────────
+   *  0 | 12 |   812.5     |   ~1.2 kbps
+   *  1 | 11 |   812.5     |   ~2.1 kbps
+   *  2 | 10 |   812.5     |   ~3.9 kbps
+   *  3 |  9 |   812.5     |   ~7.1 kbps
+   *  4 |  8 |   812.5     |  ~12.7 kbps
+   *  5 |  7 |   812.5     |  ~22.2 kbps
+   *  6 |  6 |   812.5     |    ~38 kbps
+   *  7 |  5 |   812.5     |    ~63 kbps
    * ──────────────────────────────────────────────────────────────
    */
   .dataRates = {
     /* DR0 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = {12, 203.125f, 5}},
+                .dr = {.lora = {12, 812.5f, 8}},
                 .pc = {.lora = { 8, false, true, true  }} },
     /* DR1 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = {11, 203.125f, 5}},
+                .dr = {.lora = {11, 812.5f, 8}},
                 .pc = {.lora = { 8, false, true, true  }} },
     /* DR2 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = {10, 203.125f, 5}},
+                .dr = {.lora = {10, 812.5f, 8}},
                 .pc = {.lora = { 8, false, true, false }} },
     /* DR3 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = { 9, 203.125f, 5}},
+                .dr = {.lora = { 9, 812.5f, 8}},
                 .pc = {.lora = { 8, false, true, false }} },
     /* DR4 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = { 8, 406.25f,  5}},
+                .dr = {.lora = { 8, 812.5f,  8}},
                 .pc = {.lora = { 8, false, true, false }} },
     /* DR5 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = { 7, 812.5f,   5}},
+                .dr = {.lora = { 7, 812.5f,   8}},
                 .pc = {.lora = { 8, false, true, false }} },
     /* DR6 */ { .modem = RADIOLIB_MODEM_LORA,
-                .dr = {.lora = { 5, 1625.0f,  5}},
-                .pc = {.lora = { 8, false, true, false }} },
-    RADIOLIB_DATARATE_NONE,  /* DR7  – unused */
+                .dr = {.lora = { 6, 812.5f,   8}},
+                .pc = {.lora = {12, false, true, false }} },
+    /* DR7 */ { .modem = RADIOLIB_MODEM_LORA,
+                .dr = {.lora = { 5, 812.5f,   8}},
+                .pc = {.lora = {12, false, true, false }} },
     RADIOLIB_DATARATE_NONE,  /* DR8  – unused */
     RADIOLIB_DATARATE_NONE,  /* DR9  – unused */
     RADIOLIB_DATARATE_NONE,  /* DR10 – unused */
