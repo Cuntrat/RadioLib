@@ -992,6 +992,7 @@ class LoRaWANNode {
       If you have to go above 50 you probably have a bug somewhere. Check your device timing.
     */
     RadioLibTime_t scanGuard = 10;
+    RadioLibTime_t scanGuardJoin = 10;
 
 #if !RADIOLIB_GODMODE
   protected:
@@ -1252,6 +1253,9 @@ class LoRaWANNode {
 
     // function that allows sleeping via user-provided callback
     void sleepDelay(RadioLibTime_t ms, bool radioOff = true);
+    
+    // pick scanGuard based on current activation/session state
+    RadioLibTime_t getActiveScanGuard() const;
 
     // 16-bit checksum method that takes a uint8_t array of even length and calculates the checksum
     static uint16_t checkSum16(const uint8_t *key, uint16_t keyLen);

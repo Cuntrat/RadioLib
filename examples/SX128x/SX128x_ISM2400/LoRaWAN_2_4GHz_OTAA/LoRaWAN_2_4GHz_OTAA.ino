@@ -46,7 +46,7 @@
    uint32_t magic = 0;
    EEPROM.get(EE_ADDR_MAGIC, magic);
    if(magic != NONCES_MAGIC) {
-     Serial.println(F("No saved nonces"));
+     Serial.println(F("No saved nonces\n"));
      return false;
    }
  
@@ -57,12 +57,13 @@
  
    int16_t st = node.setBufferNonces(nonces);
    if(st == RADIOLIB_ERR_NONE) {
-     Serial.println(F("Nonces restored"));
+     Serial.println(F("Nonces restored\n"));
      return true;
    }
  
    Serial.print(F("Nonces restore failed: "));
    Serial.println(st);
+   Serial.println("");
    return false;
  }
  
@@ -92,6 +93,7 @@
      Serial.print(F("Join failed: "));
      Serial.println(st);
    }
+   Serial.println("");
  }
  
  void setup() {
@@ -124,7 +126,6 @@
      Serial.println(st);
      while(true) delay(1000);
    }
-   node.scanGuard = 250;
  
    st = node.setDatarate(0); // DR0 = SF12
    if(st != RADIOLIB_ERR_NONE) {
@@ -167,5 +168,5 @@
      counter++;
    }
  
-   delay(5000);
+   delay(1000);
  }
