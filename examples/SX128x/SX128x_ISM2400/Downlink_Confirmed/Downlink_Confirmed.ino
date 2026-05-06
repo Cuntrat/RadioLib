@@ -172,7 +172,7 @@ void loop() {
   if(st == RADIOLIB_ERR_NETWORK_NOT_JOINED) {
     joined = false;
     Serial.println(F("Not joined"));
-  } else if(st == RADIOLIB_LORAWAN_NO_RX) {
+  } else if(st == RADIOLIB_ERR_RX_TIMEOUT) {
     Serial.println(F("No RX"));
   } else if(st >= 0) {
     Serial.println(F("OK"));

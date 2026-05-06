@@ -176,7 +176,7 @@ void loop() {
   Serial.print(F("Result: "));
   Serial.println(st);
 
-  if(st == RADIOLIB_LORAWAN_NO_RX) {
+  if(st == RADIOLIB_ERR_RX_TIMEOUT) {
     Serial.println(F("  ⚠ No ACK received (timeout)"));
     // In confirmed mode, failed ACK means frame might not be received
   } else if(st == RADIOLIB_ERR_NETWORK_NOT_JOINED) {

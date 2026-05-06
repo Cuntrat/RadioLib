@@ -166,7 +166,7 @@ void loop() {
   uint8_t down[256];
   size_t downLen = 0;
 
-  Serial.print(F("Sending unconfirmed uplink [counter="));
+  Serial.print(F("Sending unconfirmed uplink [counter = "));
   Serial.print(counter);
   Serial.print(F("]... "));
 
