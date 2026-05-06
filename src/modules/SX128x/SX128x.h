@@ -344,7 +344,7 @@
 
 //RADIOLIB_SX128X_REG_LORA_SYNC_WORD_1 - RADIOLIB_SX128X_REG_LORA_SYNC_WORD_2
 #define RADIOLIB_SX128X_SYNC_WORD_PRIVATE                       0x12
-#define RADIOLIB_SX128X_SYNC_WORD_LORAWAN                       0x21        // LoRaWAN ISM2400 public network sync word
+#define RADIOLIB_SX128X_SYNC_WORD_LORAWAN                       0x21        // LoRaWAN ISM2400 public-network sync word
 
 /*!
   \class SX128x

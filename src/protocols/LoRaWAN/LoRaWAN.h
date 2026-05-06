@@ -992,6 +992,7 @@ class LoRaWANNode {
       If you have to go above 50 you probably have a bug somewhere. Check your device timing.
     */
     RadioLibTime_t scanGuard = 10;
+    // dedicated guard used only during OTAA activation window scheduling
     RadioLibTime_t scanGuardJoin = 10;
 
 #if !RADIOLIB_GODMODE

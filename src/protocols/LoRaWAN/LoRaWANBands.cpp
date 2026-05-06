@@ -822,59 +822,43 @@ const LoRaWANBand_t IN865 = {
   }
 };
 
-/*
- * PATCH: ISM2_4GHz band definition corrected
- * Based on:
- *   - Semtech SX1280 Datasheet (DS.SX1280-1.W.APP)
- *   - LoRa Alliance RP002-1.0.4 (ISM 2.4 GHz is a custom/proprietary band)
- *   - SX1280ED1ZHP User Guide (UG.DEV.SX1280-1.W.APP)
- */
+// ISM2400 band definition.
+// based on:
+// - Semtech SX1280 Datasheet (DS.SX1280-1.W.APP)
+// - LoRa Alliance RP002-1.0.4
+// - SX1280ED1ZHP User Guide (UG.DEV.SX1280-1.W.APP)
 
 const LoRaWANBand_t ISM2400 = {
   .bandNum  = BandISM2400,
   .bandType = RADIOLIB_LORAWAN_BAND_DYNAMIC,
 
-  /* ISM2400 regional range in Semtech reference definitions; values in 100 Hz steps */
-  .freqMin  = 24000000,   /* 2400.0 MHz */
-  .freqMax  = 24800000,   /* 2480.0 MHz */
+  // ISM2400 regional range in Semtech reference definitions; values in 100 Hz steps.
+  .freqMin  = 24000000,   // 2400.0 MHz
+  .freqMax  = 24800000,   // 2480.0 MHz
 
-  /*
-   * Maximum application payload per DR (N-value, excl. LoRaWAN overhead)
-   * according to TN1300.03 Table 8.
-   * DR | SF | BW (kHz) | Max payload (N)
-   * ───┼────┼──────────┼────────────────
-   *  0 | 12 |   812.5  |   51 B
-   *  1 | 11 |   812.5  |  115 B
-   *  2 | 10 |   812.5  |  220 B
-   *  3 |  9 |   812.5  |  220 B
-   *  4 |  8 |   812.5  |  220 B
-   *  5 |  7 |   812.5  |  220 B
-   *  6 |  6 |   812.5  |  220 B
-   *  7 |  5 |   812.5  |  220 B
-   */
+  // maximum application payload per DR (N-value, excluding LoRaWAN overhead),
+  // according to TN1300.03 Table 8.
   .payloadLenMax = { 51, 115, 220, 220, 220, 220, 220, 220, 0, 0, 0, 0, 0, 0, 0 },
 
-  /* TN1300.03: Max EIRP defaults to +10 dBm, 2 dB steps, indices 0..7 */
+  // TN1300.03: max EIRP defaults to +10 dBm, 2 dB steps, indices 0..7.
   .powerMax      = 10,
   .powerNumSteps = 7,
 
-  /* No regulatory duty cycle in the global 2.4 GHz ISM band */
+  // no regulatory duty cycle in the global 2.4 GHz ISM band.
   .dutyCycle   = 0,
   .dwellTimeUp = 0,
   .dwellTimeDn = 0,
 
-  /* TxParamSetup MAC command supported (network may cap EIRP) */
+  // TxParamSetup MAC command supported (network may cap EIRP).
   .txParamSupported = true,
 
-  /* 
-   * Three default uplink channels (dynamic band)
-   * Semtech ISM2400 default JoinReq channels (TN1300.03 Table 3):
-   * 2403, 2425, 2479 MHz with DR0..DR7.
-   */
+  // three default uplink channels (dynamic band).
+  // Semtech ISM2400 default JoinReq channels (TN1300.03 Table 3):
+  // 2403, 2425, 2479 MHz with DR0..DR7.
   .txFreqs = {
-    { .idx = 0, .freq = 24030000, .drMin = 0, .drMax = 7, .dr = 3 }, /* 2403.0 MHz */
-    { .idx = 1, .freq = 24250000, .drMin = 0, .drMax = 7, .dr = 3 }, /* 2425.0 MHz */
-    { .idx = 2, .freq = 24790000, .drMin = 0, .drMax = 7, .dr = 3 }, /* 2479.0 MHz */
+    { .idx = 0, .freq = 24030000, .drMin = 0, .drMax = 7, .dr = 3 }, // 2403.0 MHz
+    { .idx = 1, .freq = 24250000, .drMin = 0, .drMax = 7, .dr = 3 }, // 2425.0 MHz
+    { .idx = 2, .freq = 24790000, .drMin = 0, .drMax = 7, .dr = 3 }, // 2479.0 MHz
   },
 
   .numTxSpans = 0,
@@ -902,11 +886,11 @@ const LoRaWANBand_t ISM2400 = {
     /* DR14 */ { 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F },
   },
 
-  /* Rx2 window: 2423.0 MHz at DR0 (SF12 / BW 812.5 kHz) */
+  // Rx2 window: 2423.0 MHz at DR0 (SF12 / BW 812.5 kHz).
   .rx2 = { .idx = 0, .freq = 24230000, .drMin = 0, .drMax = 7, .dr = 0 },
 
-  /* WoR / ACK relay channels (not part of standard LoRaWAN; kept for
-   * structural completeness — set equal to mid-band channels) */
+  // WoR/ACK relay channels are not part of standard LoRaWAN.
+  // keep them for structural completeness and map to mid-band channels.
   .txWoR = {
     { .idx = 0, .freq = 24450000, .drMin = 3, .drMax = 3, .dr = 3 },
     { .idx = 1, .freq = 24550000, .drMin = 3, .drMax = 3, .dr = 3 }
@@ -916,21 +900,8 @@ const LoRaWANBand_t ISM2400 = {
     { .idx = 1, .freq = 24550000, .drMin = 3, .drMax = 3, .dr = 3 }
   },
 
-  /*
-   * Data rates for SX1280 LoRa @ ISM2400 (TN1300.03 Table 4)
-   * ─────────────────────────────────────────────────────────────
-   * DR | SF |    BW (kHz) | Approx. raw bitrate
-   * ───┼────┼─────────────┼─────────────────────
-   *  0 | 12 |   812.5     |   ~1.2 kbps
-   *  1 | 11 |   812.5     |   ~2.1 kbps
-   *  2 | 10 |   812.5     |   ~3.9 kbps
-   *  3 |  9 |   812.5     |   ~7.1 kbps
-   *  4 |  8 |   812.5     |  ~12.7 kbps
-   *  5 |  7 |   812.5     |  ~22.2 kbps
-   *  6 |  6 |   812.5     |    ~38 kbps
-   *  7 |  5 |   812.5     |    ~63 kbps
-   * ──────────────────────────────────────────────────────────────
-   */
+  // data rates for SX1280 LoRa @ ISM2400 (TN1300.03 Table 4).
+  // DR0-DR7 all use BW 812.5 kHz with SF12..SF5.
   .dataRates = {
     /* DR0 */ { .modem = RADIOLIB_MODEM_LORA,
                 .dr = {.lora = {12, 812.5f, 8}},
@@ -956,13 +927,13 @@ const LoRaWANBand_t ISM2400 = {
     /* DR7 */ { .modem = RADIOLIB_MODEM_LORA,
                 .dr = {.lora = { 5, 812.5f,   8}},
                 .pc = {.lora = {12, false, true, false }} },
-    RADIOLIB_DATARATE_NONE,  /* DR8  – unused */
-    RADIOLIB_DATARATE_NONE,  /* DR9  – unused */
-    RADIOLIB_DATARATE_NONE,  /* DR10 – unused */
-    RADIOLIB_DATARATE_NONE,  /* DR11 – unused */
-    RADIOLIB_DATARATE_NONE,  /* DR12 – unused */
-    RADIOLIB_DATARATE_NONE,  /* DR13 – unused */
-    RADIOLIB_DATARATE_NONE,  /* DR14 – unused */
+    RADIOLIB_DATARATE_NONE,  // DR8 unused
+    RADIOLIB_DATARATE_NONE,  // DR9 unused
+    RADIOLIB_DATARATE_NONE,  // DR10 unused
+    RADIOLIB_DATARATE_NONE,  // DR11 unused
+    RADIOLIB_DATARATE_NONE,  // DR12 unused
+    RADIOLIB_DATARATE_NONE,  // DR13 unused
+    RADIOLIB_DATARATE_NONE,  // DR14 unused
   }
 };
 

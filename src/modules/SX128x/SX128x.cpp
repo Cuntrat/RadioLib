@@ -805,17 +805,18 @@ int16_t SX128x::setDataRate(DataRate_t dr, ModemType_t modem) {
   }
 
   // select interpretation based on modem
-  if (modem == RADIOLIB_MODEM_LORA) {
-      state = this->setBandwidth(dr.lora.bandwidth);
-      RADIOLIB_ASSERT(state);
-      state = this->setSpreadingFactor(dr.lora.spreadingFactor);
-      RADIOLIB_ASSERT(state);
-      // LoRaWAN ISM2400 commonly uses CR 4/8 with long interleaving.
-      // Keep default behavior for other rates/modulations.
-      bool longInterleaving = (dr.lora.codingRate == 8) && (dr.lora.bandwidth >= 800.0f);
-      state = this->setCodingRate(dr.lora.codingRate, longInterleaving);
+  if(modem == RADIOLIB_MODEM_LORA) {
+    state = this->setBandwidth(dr.lora.bandwidth);
+    RADIOLIB_ASSERT(state);
+    state = this->setSpreadingFactor(dr.lora.spreadingFactor);
+    RADIOLIB_ASSERT(state);
+
+    // LoRaWAN ISM2400 commonly uses CR 4/8 with long interleaving.
+    // keep default behavior for other rates/modulations.
+    bool longInterleaving = (dr.lora.codingRate == 8) && (dr.lora.bandwidth >= 800.0f);
+    state = this->setCodingRate(dr.lora.codingRate, longInterleaving);
   } else {
-      return(RADIOLIB_ERR_WRONG_MODEM);
+    return(RADIOLIB_ERR_WRONG_MODEM);
   }
   return(state);
 }
@@ -970,27 +971,25 @@ int16_t SX128x::setDataShaping(uint8_t sh) {
 int16_t SX128x::setSyncWord(uint8_t* sync, size_t len) {
   uint8_t modem = getPacketType();
 
-  /* ── LoRa / Ranging: single-byte sync word via the dedicated overload ── */
+  // LoRa/ranging use the single-byte sync word overload.
   if(modem == RADIOLIB_SX128X_PACKET_TYPE_LORA ||
      modem == RADIOLIB_SX128X_PACKET_TYPE_RANGING) {
     if(len < 1) {
       return(RADIOLIB_ERR_INVALID_SYNC_WORD);
     }
-    /*
-     * controlBits = 0x44 selects the public-network (LoRaWAN) sync word.
-     * For private networks use 0x12 (RADIOLIB_SX128X_SYNC_WORD_PRIVATE).
-     */
+    // controlBits = 0x44 selects the public-network (LoRaWAN) sync word.
+    // for private networks use 0x12 (RADIOLIB_SX128X_SYNC_WORD_PRIVATE).
     return(setSyncWord(sync[0], 0x44));
   }
 
-  /* ── GFSK / FLRC: byte-array sync word (original implementation) ─────── */
+  // GFSK/FLRC use byte-array sync words.
   if(!((modem == RADIOLIB_SX128X_PACKET_TYPE_GFSK) ||
        (modem == RADIOLIB_SX128X_PACKET_TYPE_FLRC))) {
     return(RADIOLIB_ERR_WRONG_MODEM);
   }
 
   if(modem == RADIOLIB_SX128X_PACKET_TYPE_GFSK) {
-    /* GFSK supports up to 5 sync-word bytes */
+    // GFSK supports up to 5 sync-word bytes.
     if(len > 5) {
       return(RADIOLIB_ERR_INVALID_SYNC_WORD);
     }
@@ -999,19 +998,19 @@ int16_t SX128x::setSyncWord(uint8_t* sync, size_t len) {
     }
 
   } else {
-    /* FLRC requires exactly 4 bytes (or 0 to disable) */
+    // FLRC requires exactly 4 bytes (or 0 to disable).
     if(!((len == 0) || (len == 4))) {
       return(RADIOLIB_ERR_INVALID_SYNC_WORD);
     }
     this->syncWordLen = len;
   }
 
-  /* Write sync-word bytes to the register bank */
+  // write sync-word bytes to the register bank
   int16_t state = SX128x::writeRegister(
       RADIOLIB_SX128X_REG_SYNC_WORD_1_BYTE_4 + (5 - len), sync, len);
   RADIOLIB_ASSERT(state);
 
-  /* Update packet parameters */
+  // update packet parameters
   if(this->syncWordLen == 0) {
     this->syncWordMatch = RADIOLIB_SX128X_GFSK_FLRC_SYNC_WORD_OFF;
   } else {
