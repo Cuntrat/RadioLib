@@ -162,8 +162,7 @@ void loop() {
     (uint8_t)(counter)
   };
 
-  // CONFIRMED uplink: use sendReceive with fPort=1 (confirmed flag in LoRaWAN layer)
-  // Set fPort to negative to request confirmation (confirmed frame)
+  // CONFIRMED uplink: use sendReceive with fPort=1 and confirmed flag (true)
   uint8_t down[256];
   size_t downLen = 0;
 
@@ -171,30 +170,47 @@ void loop() {
   Serial.print(counter);
   Serial.print(F("]... "));
 
-  // Negative fPort (or use node.sendFrameConfirmed) to send confirmed frame
   int16_t st = node.sendReceive(up, sizeof(up), 1, down, &downLen, true);
   Serial.print(F("Result: "));
   Serial.println(st);
 
   if(st == RADIOLIB_ERR_RX_TIMEOUT) {
-    Serial.println(F("  ⚠ No ACK received (timeout)"));
+    Serial.println(F("  ⚠ NO ACK RECEIVED (timeout)"));
     // In confirmed mode, failed ACK means frame might not be received
   } else if(st == RADIOLIB_ERR_NETWORK_NOT_JOINED) {
     joined = false;
-  } else if(st >= 0) {
-    Serial.println(F("  ✓ ACK received from server"));
+  } else if(st == 0) {
+    // Result 0 = ACK received, no downlink data
+    Serial.println(F("  ✓ ACK RECEIVED (clean)"));
     counter++;
+  } else if(st > 0) {
+    // Result > 0 = ACK received + downlink bytes
+    Serial.print(F("  ✓ ACK RECEIVED + DOWNLINK ("));
+    Serial.print(st);
+    Serial.println(F(" bytes)"));
     
-    if(downLen > 0) {
-      Serial.print(F("  Downlink data: "));
-      Serial.println(downLen);
-      Serial.print(F("  Data: "));
-      for(size_t i = 0; i < downLen; i++) {
-        Serial.print(down[i], HEX);
-        Serial.print(F(" "));
-      }
-      Serial.println();
+    Serial.print(F("  Hex: "));
+    for(size_t i = 0; i < downLen; i++) {
+      if(down[i] < 0x10) Serial.print(F("0"));
+      Serial.print(down[i], HEX);
+      Serial.print(F(" "));
     }
+    Serial.println();
+    
+    Serial.print(F("  ASCII: "));
+    for(size_t i = 0; i < downLen; i++) {
+      if(down[i] >= 32 && down[i] <= 126) {
+        Serial.print((char)down[i]);
+      } else {
+        Serial.print(F("."));
+      }
+    }
+    Serial.println();
+    
+    counter++;
+  } else {
+    Serial.print(F("  ✗ ERROR: "));
+    Serial.println(st);
   }
 
   delay(30000); // Send every 30 seconds (to ensure RX windows complete)
