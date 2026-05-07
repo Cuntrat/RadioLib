@@ -20,10 +20,15 @@
 #include <EEPROM.h>
 
 // ============ HARDWARE PINS ============
-#define SX1280_NSS   D7
-#define SX1280_DIO1  D5
+// SX1280 connections (STM32 Nucleo-64 / Arduino header):
+// NSS pin:   7  (D7 = PA8)
+// DIO1 pin:  5  (D5 = PB4)
+// NRST pin:  A0 (PA0)
+// BUSY pin:  3  (D3 = PB3)
+#define SX1280_NSS   7
+#define SX1280_DIO1  5
 #define SX1280_NRST  A0
-#define SX1280_BUSY  D3
+#define SX1280_BUSY  3
 
 // ============ LORAWAN CREDENTIALS (MSB order) ============
 uint64_t joinEUI = 0xA001C5DC0FA37C02ULL;
